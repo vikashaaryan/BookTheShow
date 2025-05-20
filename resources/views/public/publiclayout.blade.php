@@ -11,26 +11,26 @@
     {!! ToastMagic::styles() !!}
 </head>
 
-<body class="flex flex-col min-h-screen">
+<body class="flex flex-col bg-gray-100 min-h-screen">
     <div class="border border-gray-200 bg-white shadow-lg py-4 px-6">
         <div class="px-6 mx-auto flex items-center justify-between">
             <!-- Logo -->
             <a href="#"
-                class="text-2xl font-extrabold tracking-tight text-gray-800 hover:text-red-600 transition duration-300">
+                class="text-xl font-extrabold tracking-tight text-gray-800 hover:text-red-600 transition duration-300">
                 The<span class="text-red-600">Book</span><span class="text-gray-600">Show</span>
             </a>
 
             <div>
                 <form action="">
-                    <input type="search" placeholder="Search..." size="50"
-                        class="border border-gray-300 rounded-md px-4 py-2 outline-none">
+                    <input type="search" placeholder="Search for Movie,Events..." size="50"
+                        class="border border-gray-300  rounded-md px-4 py-1 outline-none">
                     <button type="submit"
-                        class="bg-red-600 text-white px-4 cursor-pointer py-2 rounded-md hover:bg-red-700 transition duration-300">
+                        class="bg-red-600 text-white px-4 cursor-pointer py-1 rounded-md hover:bg-red-700 transition duration-300">
                         Search
                 </form>
             </div>
             <nav class="hidden md:flex items-center gap-8 text-lg font-medium">
-                <a href="#" class="flex items-center gap-1 text-md text-gray-700 hover:text-red-600 transition">
+                <a href="#" class="flex items-center gap-1 text-xs text-gray-700 hover:text-red-600 transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" viewBox="0 0 20 20"
                         fill="currentColor">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-6a2 2 0 110-4 2 2 0 010 4z"
@@ -41,7 +41,7 @@
 
 
                 <a href="#"
-                    class="bg-red-600 text-md text-white px-3 py-1 rounded-md font-semibold hover:bg-red-700 transition duration-300">
+                    class="bg-red-600 text-xs text-white px-3 py-1 rounded-md font-semibold hover:bg-red-700 transition duration-300">
                     Sing in
                 </a>
 
@@ -101,8 +101,8 @@
             </nav>
         </div>
     </div>
-    <div class="bg-white shadow-sm py-3 px-6">
-        <nav class="flex space-x-6 px-6">
+    <div class="bg-white flex justify-between shadow-sm py-3 px-6">
+        <div class="flex space-x-6 text-xs px-6">
             <a href="#" class="text-gray-700 font-medium hover:text-red-600 transition duration-200">Movies</a>
             <a href="#" class="text-gray-700 font-medium hover:text-red-600 transition duration-200">Streams</a>
             <a href="#" class="text-gray-700 font-medium hover:text-red-600 transition duration-200">Events</a>
@@ -110,7 +110,15 @@
             <a href="#" class="text-gray-700 font-medium hover:text-red-600 transition duration-200">Sports</a>
             <a href="#"
                 class="text-gray-700 font-medium hover:text-red-600 transition duration-200">Activities</a>
-        </nav>
+        </div>
+        <div class="flex gap-6 text-xs">
+            <a href="#" class="text-gray-700 font-medium hover:text-red-600 transition duration-200">ListYourShow</a>
+            <a href="#" class="text-gray-700 font-medium hover:text-red-600 transition duration-200">Corporates</a>
+            <a href="#" class="text-gray-700 font-medium hover:text-red-600 transition duration-200">Offers</a>
+            <a href="#" class="text-gray-700 font-medium hover:text-red-600 transition duration-200">Gift Cards</a>
+
+
+        </div>
     </div>
     <main class="flex-grow">
         @section('content')
