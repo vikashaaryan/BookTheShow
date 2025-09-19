@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PublicController;
+use App\Livewire\ApiDemo;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [PublicController::class, 'home'])->name('home');
+Route::get('/',ApiDemo::class)->name('home');
