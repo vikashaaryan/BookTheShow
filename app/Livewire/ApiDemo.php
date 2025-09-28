@@ -2,115 +2,130 @@
 
 namespace App\Livewire;
 
-use App\Models\Task;
+use App\Models\Question;
 use Livewire\Component;
 use Illuminate\Support\Facades\Http;
 
 class ApiDemo extends Component
 {
-    public $tasks;
-    public $title;
-    public $description;
-    public $title_hi;
-    public $description_hi;
-    public $taskId;
+    public $questions;
+    public $question_text = '';
+    public $options_input = ['', '', '', ''];
+    public $correct_option = '';
+    public $solution = '';
+    public $question_text_hi = '';
+    public $options_hi = ['', '', '', ''];
+    public $questionId;
     public $isEditing = false;
 
     protected $rules = [
-        'title' => 'required|min:3',
-        'description' => 'nullable|string',
+        'question_text' => 'required|min:5',
+        'options_input' => 'required|array|size:4',
+        'options_input.*' => 'required|string|min:1',
+        'correct_option' => 'required|in_array:options_input.*',
+        'solution' => 'nullable|string',
     ];
+
+    protected $listeners = ['optionsUpdated' => 'updateOptions'];
 
     public function mount()
     {
-        $this->loadTasks();
+        $this->questions = Question::orderBy('created_at', 'desc')->get();
+        $this->options_input = ['', '', '', ''];
     }
 
-    public function loadTasks()
-    {
-        $this->tasks = Task::orderBy('created_at', 'desc')->get();
-    }
-
-    public function createTask()
+    public function createQuestion()
     {
         $this->validate();
 
-        $titleHi = $this->translateText($this->title);
-        $descriptionHi = $this->description ? $this->translateText($this->description) : null;
+        $options = array_filter(array_map('trim', $this->options_input));
+        if (count($options) !== 4) {
+            $this->addError('options_input', 'Exactly four options are required.');
+            return;
+        }
 
-        Task::create([
-            'title' => $this->title,
-            'description' => $this->description,
+        $questionHi = $this->translateText($this->question_text);
+        $optionsHi = array_map([$this, 'translateText'], $options);
+
+        // Store the raw LaTeX content directly
+        Question::create([
+            'question_text' => $this->question_text, // Store with LaTeX intact
+            'options' => json_encode($options), // Store with LaTeX intact
+            'correct_option' => $this->correct_option,
+            'solution' => $this->solution, // Store with LaTeX intact
             'translations' => [
                 'hi' => [
-                    'title' => $titleHi,
-                    'description' => $descriptionHi,
+                    'question_text' => $questionHi,
+                    'options' => $optionsHi,
                 ],
             ],
         ]);
 
         $this->resetInput();
-        $this->loadTasks();
-        session()->flash('message', 'Task created successfully.');
+        $this->loadQuestions();
+        session()->flash('message', 'Question created successfully.');
     }
 
-    public function editTask($id)
+    public function editQuestion($id)
     {
-        $task = Task::findOrFail($id);
-        $this->taskId = $id;
-        $this->title = $task->title;
-        $this->description = $task->description;
-        $this->title_hi = $task->translations['hi']['title'] ?? '';
-        $this->description_hi = $task->translations['hi']['description'] ?? '';
+        $question = Question::findOrFail($id);
+        $this->questionId = $id;
+        $this->question_text = $question->question_text; // Get raw LaTeX
+        $this->options_input = json_decode($question->options, true) ?? ['', '', '', ''];
+        $this->correct_option = $question->correct_option;
+        $this->solution = $question->solution; // Get raw LaTeX
+        $this->question_text_hi = $question->translations['hi']['question_text'] ?? '';
+        $this->options_hi = $question->translations['hi']['options'] ?? ['', '', '', ''];
         $this->isEditing = true;
     }
 
-    public function updateTask()
+    public function updateQuestion()
     {
         $this->validate();
 
-        if ($this->taskId) {
-            $task = Task::find($this->taskId);
+        $options = array_filter(array_map('trim', $this->options_input));
+        if (count($options) !== 4) {
+            $this->addError('options_input', 'Exactly four options are required.');
+            return;
+        }
 
-            $titleHi = $this->translateText($this->title);
-            $descriptionHi = $this->description ? $this->translateText($this->description) : null;
+        if ($this->questionId) {
+            $question = Question::find($this->questionId);
 
-            $task->update([
-                'title' => $this->title,
-                'description' => $this->description,
+            $questionHi = $this->translateText($this->question_text);
+            $optionsHi = array_map([$this, 'translateText'], $options);
+
+            // Update with raw LaTeX content
+            $question->update([
+                'question_text' => $this->question_text, // Keep LaTeX intact
+                'options' => json_encode($options), // Keep LaTeX intact
+                'correct_option' => $this->correct_option,
+                'solution' => $this->solution, // Keep LaTeX intact
                 'translations' => [
                     'hi' => [
-                        'title' => $titleHi,
-                        'description' => $descriptionHi,
+                        'question_text' => $questionHi,
+                        'options' => $optionsHi,
                     ],
                 ],
             ]);
 
             $this->resetInput();
-            $this->loadTasks();
-            session()->flash('message', 'Task updated successfully.');
+            $this->loadQuestions();
+            session()->flash('message', 'Question updated successfully.');
         }
     }
 
-    public function toggleTask($id)
+    public function deleteQuestion($id)
     {
-        $task = Task::find($id);
-        $task->completed = !$task->completed;
-        $task->save();
-        $this->loadTasks();
-    }
-
-    public function deleteTask($id)
-    {
-        Task::find($id)->delete();
-        $this->loadTasks();
-        session()->flash('message', 'Task deleted successfully.');
+        Question::find($id)->delete();
+        $this->loadQuestions();
+        session()->flash('message', 'Question deleted successfully.');
     }
 
     private function translateText($text)
     {
         if (!$text) {
-            return null;
+            return '';
         }
 
         try {
@@ -120,21 +135,34 @@ class ApiDemo extends Component
                 "dest" => "hi"
             ]);
 
-            return $response->json("translated");
+            return $response->json('translated') ?? $text;
         } catch (\Exception $e) {
-            session()->flash('message', 'Translation failed: ' . $e->getMessage());
-            return null;
+            session()->flash('error', 'Translation failed: ' . $e->getMessage());
+            return $text;
         }
+    }
+
+    public function updateOptions($options)
+    {
+        $this->options_input = $options;
+        $this->options_hi = array_map([$this, 'translateText'], $options);
     }
 
     public function resetInput()
     {
-        $this->title = '';
-        $this->description = '';
-        $this->title_hi = '';
-        $this->description_hi = '';
-        $this->taskId = null;
+        $this->question_text = '';
+        $this->options_input = ['', '', '', ''];
+        $this->correct_option = '';
+        $this->solution = '';
+        $this->question_text_hi = '';
+        $this->options_hi = ['', '', '', ''];
+        $this->questionId = null;
         $this->isEditing = false;
+    }
+
+    public function loadQuestions()
+    {
+        $this->questions = Question::orderBy('created_at', 'desc')->get();
     }
 
     public function render()
